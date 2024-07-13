@@ -23,6 +23,8 @@ class UserSerializer(serializers.ModelSerializer):
 class JobApplicationSerializer(serializers.ModelSerializer):
     job = JobSerializer()
     applicant = serializers.StringRelatedField()  # or UserSerializer if you want detailed user info
+    phone_number = serializers.CharField(source='applicant.userprofile.phone_number', read_only=True)
+    applicant_name = serializers.CharField(source='applicant.username', read_only=True)
 
     class Meta:
         model = JobApplication

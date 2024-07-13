@@ -119,17 +119,27 @@ class JobViewSet(viewsets.ModelViewSet):
 class JobApplicationViewSet(viewsets.ModelViewSet):
     queryset = JobApplication.objects.all()
     serializer_class = JobApplicationSerializer
+    permission_classes = [IsAuthenticated]
+
+    def perform_update(self, serializer):
+        if self.request.user != serializer.instance.job.posted_by:
+            return Response({"detail": "Not authorized to accept/deny this application."}, status=status.HTTP_403_FORBIDDEN)
+        super().perform_update(serializer)
 
     @action(detail=True, methods=['post'])
     def accept(self, request, pk=None):
         application = self.get_object()
+        if request.user != application.job.posted_by:
+            return Response({"detail": "Not authorized to accept this application."}, status=status.HTTP_403_FORBIDDEN)
         application.status = 'accepted'
         application.save()
-        return Response({'status': 'Application accepted'})
+        return Response({'status': 'Application accepted', 'phone_number': application.applicant.userprofile.phone_number})
 
     @action(detail=True, methods=['post'])
     def deny(self, request, pk=None):
         application = self.get_object()
+        if request.user != application.job.posted_by:
+            return Response({"detail": "Not authorized to deny this application."}, status=status.HTTP_403_FORBIDDEN)
         application.status = 'denied'
         application.save()
         return Response({'status': 'Application denied'})
