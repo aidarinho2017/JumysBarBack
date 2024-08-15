@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from rest_framework import serializers
-from .models import Job, UserProfile, JobApplication
+from .models import Job, UserProfile, JobApplication, ChatRoom, Message, Comment
 
 
 class JobSerializer(serializers.ModelSerializer):
@@ -34,3 +34,22 @@ class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserProfile
         fields = ['user', 'name', 'surname', 'birthdate', 'email', 'phone_number', 'job_description', 'jobs_done', 'jobs_posted', 'rating']
+
+class MessageSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Message
+        fields = ['id', 'chat_room', 'sender', 'content', 'timestamp']
+
+class ChatRoomSerializer(serializers.ModelSerializer):
+    messages = MessageSerializer(many=True, read_only=True)
+    class Meta:
+        model = ChatRoom
+        fields = ['id', 'job', 'participants', 'messages']
+
+class CommentSerializer(serializers.ModelSerializer):
+    author_username = serializers.CharField(source='author.username', read_only=True)
+
+    class Meta:
+        model = Comment
+        fields = ['id', 'job', 'author', 'author_username', 'text', 'created_at']
+        read_only_fields = ['author', 'created_at']
